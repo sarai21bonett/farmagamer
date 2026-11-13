@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>¿Quién quiere ser Millonario? - Farmacia</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    background: radial-gradient(circle at 50% 0%, #0b2a4a 0%, #05101f 70%);
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 8px;
+  }
+
+  /* ====== CONTENEDOR TIPO CELULAR (9:16) ====== */
+  #gameContainer {
+    position: relative;
+    width: min(100%, calc((100dvh - 16px) * 9 / 16));
+    aspect-ratio: 9 / 16;
+    max-height: calc(100dvh - 16px);
+    border-radius: 22px;
+    overflow: hidden;
+    background: linear-gradient(160deg, #0d1b3e, #05101f);
+    box-shadow:
+      0 20px 50px rgba(0,0,0,0.8),
+      0 0 0 4px #1e293b,
+      0 0 40px rgba(30,144,255,0.35);
+    display: flex;
+    flex-direction: column;
+    container-type: size;
+  }
+
+  @media (min-width: 900px) {
+    #gameContainer {
+      border-radius: 26px;
+      box-shadow:
+        0 30px 70px rgba(0,0,0,0.9),
+        0 0 0 6px #1e293b,
+        0 0 0 8px #0f172a,
+        0 0 60px rgba(30,144,255,0.4);
+    }
+  }
+
+  .game-inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 3.5cqw;
+    gap: 2.2cqh;
+    overflow: hidden;
+  }
+
+  /* ====== TÍTULO ====== */
+  h1 {
+    text-align: center;
+    font-size: clamp(0.85rem, 3.6cqw, 1.4rem);
+    line-height: 1.25;
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.5px;
+    font-weight: 800;
+  }
+  h1 small {
+    display: block;
+    font-size: 0.72em;
+    opacity: 0.9;
+    letter-spacing: 1px;
+  }
+
+  /* ====== COMODINES ====== */
+  .lifelines {
+    display: flex;
+    justify-content: center;
+    gap: 2.5cqw;
+  }
+  .lifeline {
+    flex: 1;
+    max-width: 32%;
+    min-height: 8cqh;
+    border-radius: 3cqw;
+    border: 2px solid #1e90ff;
+    background: rgba(30,144,255,0.15);
+    color: #fff;
+    font-size: clamp(0.55rem, 2.4cqw, 0.8rem);
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transition: all 0.2s;
+    padding: 2px;
+    touch-action: manipulation;
+  }
+  .lifeline:active:not(:disabled) {
+    background: rgba(30,144,255,0.45);
+    transform: scale(0.95);
+  }
+  .lifeline:disabled { opacity: 0.28; cursor: not-allowed; }
+  .lifeline .icon { font-size: clamp(1rem, 4.5cqw, 1.4rem); line-height: 1; }
+
+  /* ====== PREGUNTA ====== */
+  .question-box {
+    background: linear-gradient(90deg, #0d1b3e, #142850);
+    border: 2px solid #4facfe;
+    border-radius: 3.5cqw;
+    padding: 2.5cqh 3cqw;
+    min-height: 17cqh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: clamp(0.8rem, 3.3cqw, 1.1rem);
+    line-height: 1.35;
+    box-shadow: inset 0 0 20px rgba(0,242,254,0.15);
+  }
+  .question-number {
+    font-size: clamp(0.55rem, 2.3cqw, 0.75rem);
+    color: #4facfe;
+    margin-bottom: 0.6cqh;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+  }
+
+  /* ====== OPCIONES ====== */
+  .options {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 1fr;
+    gap: 1.8cqw;
+    min-height: 0;
+  }
+  
+  .option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2cqw;
+    background: linear-gradient(180deg, #0f2b4d, #081a30); 
+    border: 2px solid #4facfe;
+    border-radius: 3cqw;
+    padding: 2cqw 2.5cqw;
+    font-size: clamp(0.65rem, 2.8cqw, 0.95rem);
+    text-align: left;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    line-height: 1.25;
+    box-shadow: 
+      inset 0 2px 4px rgba(255,255,255,0.1),
+      inset 0 -2px 4px rgba(0,0,0,0.4),
+      0 4px 6px rgba(0,0,0,0.3);
+  }
+
+  .option::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%; height: 40%;
+    background: linear-gradient(180deg, rgba(79,172,254,0.2), transparent);
+    border-radius: 3cqw 3cqw 50% 50%;
+    pointer-events: none;
+  }
+
+  .option:active:not(.disabled) { 
+    transform: scale(0.96); 
+    background: linear-gradient(180deg, #081a30, #040d1a);
+  }
+
+  .option .letter {
+    font-weight: bold;
+    color: #fbbf24;
+    font-size: clamp(0.75rem, 3.2cqw, 1rem);
+    flex-shrink: 0;
+    text-shadow: 1px 1px 2px #000;
+    z-index: 1;
+  }
+  .option span:last-child { z-index: 1; }
+
+  .option.correct {
+    background: linear-gradient(180deg, #10b981, #047857) !important;
+    border-color: #34d399;
+    animation: pulse 0.5s;
+  }
+  .option.wrong {
+    background: linear-gradient(180deg, #ef4444, #991b1b) !important;
+    border-color: #f87171;
+    animation: shake 0.4s;
+  }
+  .option.disabled { cursor: default; pointer-events: none; }
+  .option.hidden-option { visibility: hidden; pointer-events: none; }
+
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* ====== MENSAJE ====== */
+  .message {
+    text-align: center;
+    font-size: clamp(0.65rem, 2.6cqw, 0.85rem);
+    min-height: 4cqh;
+    color: #4facfe;
+    font-weight: 600;
+    line-height: 1.3;
+    padding: 0 2cqw;
+  }
+  .message.win { color: #05c46b; }
+  .message.lose { color: #ff3b3b; }
+  .message.warn { color: #ffb400; }
+
+  /* ====== ESCALERA ====== */
+  .ladder {
+    background: linear-gradient(180deg, rgba(10,25,45,0.95), rgba(5,15,30,0.95));
+    border: 2px solid #ffb400;
+    border-radius: 2.5cqw;
+    padding: 1.2cqh 2cqw; 
+    display: flex;
+    flex-direction: column;
+    gap: 0.5cqh;
+    box-shadow: 0 0 20px rgba(255,180,0,0.2);
+    max-height: 26cqh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .ladder::-webkit-scrollbar { display: none; }
+
+  .ladder h2 {
+    text-align: center;
+    font-size: clamp(0.55rem, 2.4cqw, 0.8rem);
+    color: #ffb400;
+    letter-spacing: 1px;
+    margin-bottom: 0.4cqh;
+    position: sticky;
+    top: 0;
+    background: rgba(5,15,30,0.95);
+    padding: 2px 0;
+    z-index: 2;
+  }
+  
+  .rung {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6cqh 2.5cqw;
+    border-radius: 1.5cqw;
+    font-size: clamp(0.55rem, 2.2cqw, 0.78rem);
+    color: #9fc2e0;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+    flex-shrink: 0;
+  }
+  
+  .rung.active {
+    background: linear-gradient(90deg, #ffb400, #ffd700);
+    color: #05101f;
+    font-weight: bold;
+    transform: scale(1.02);
+    box-shadow: 0 0 10px rgba(255,180,0,0.6);
+    padding-left: 3.5cqw;
+    padding-right: 3.5cqw;
+  }
+  .rung.passed { color: #05c46b; border-color: rgba(5,196,107,0.4); }
+
+  /* ====== BOTÓN REINICIAR (GENERAL) ====== */
+  .restart-btn {
+    display: none;
+    margin: 0 auto;
+    padding: 1.6cqh 4cqw;
+    background: linear-gradient(90deg, #ffb400, #ffd700);
+    color: #05101f;
+    border: none;
+    border-radius: 2.5cqw;
+    font-weight: bold;
+    font-size: clamp(0.75rem, 3cqw, 0.95rem);
+    cursor: pointer;
+    transition: transform 0.2s;
+    touch-action: manipulation;
+  }
+  .restart-btn:active { transform: scale(0.97); }
+  .restart-btn.show { display: block; }
+
+  /* ====== MODAL PÚBLICO ====== */
+  .modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 4cqw;
+  }
+  .modal.show { display: flex; }
+  .modal-content {
+    background: linear-gradient(160deg, #0d1b3e, #05101f);
+    border: 2px solid #4facfe;
+    border-radius: 3.5cqw;
+    padding: 3cqh 3cqw;
+    width: 100%;
+    box-shadow: 0 0 40px rgba(79,172,254,0.5);
+  }
+  .modal-content h3 {
+    text-align: center;
+    color: #4facfe;
+    margin-bottom: 2cqh;
+    font-size: clamp(0.8rem, 3.2cqw, 1rem);
+  }
+  .bar-row { display: flex; align-items: center; gap: 2cqw; margin: 1.2cqh 0; }
+  .bar-row .label { width: 3cqw; font-weight: bold; color: #ffb400; font-size: clamp(0.65rem, 2.6cqw, 0.85rem); }
+  .bar-container {
+    flex: 1;
+    height: 2.6cqh;
+    background: #081a30;
+    border-radius: 1.5cqw;
+    overflow: hidden;
+    border: 1px solid #1e90ff;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    width: 0;
+    transition: width 0.8s ease;
+  }
+  .bar-row .pct { width: 7cqw; text-align: right; font-size: clamp(0.55rem, 2.2cqw, 0.75rem); color: #9fc2e0; }
+  .modal-close {
+    display: block;
+    margin: 2cqh auto 0;
+    padding: 1.2cqh 4cqw;
+    background: #1e90ff;
+    border: none;
+    border-radius: 2cqw;
+    color: #fff;
+    font-weight: bold;
+    font-size: clamp(0.7rem, 2.8cqw, 0.9rem);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  /* ============================================================
+     PANTALLA DE VICTORIA (OVERLAY)
+     ============================================================ */
+  #victoryScreen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, #0d1b3e, #05101f 90%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+    overflow: hidden;
+    padding: 5cqw;
+  }
+  #victoryScreen.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Luces de fondo animadas */
+  .glow-bg {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 150cqw; height: 150cqw;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,215,0,0.15) 45deg, transparent 90deg, rgba(255,215,0,0.15) 135deg, transparent 180deg, rgba(255,215,0,0.15) 225deg, transparent 270deg, rgba(255,215,0,0.15) 315deg, transparent 360deg);
+    animation: spin 20s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* Trofeo y textos */
+  .victory-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transform: translateY(20px) scale(0.9);
+    opacity: 0;
+    transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  #victoryScreen.show .victory-content {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    transition-delay: 0.2s;
+  }
+
+  .trophy {
+    font-size: clamp(3rem, 18cqw, 6rem);
+    line-height: 1;
+    margin-bottom: 2cqh;
+    filter: drop-shadow(0 0 20px rgba(255,215,0,0.6));
+    animation: bounce 2s infinite ease-in-out;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .win-title {
+    font-size: clamp(1.6rem, 8cqw, 2.8rem);
+    font-weight: 900;
+    color: #ffd700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 
+      0 0 10px rgba(255,215,0,0.8),
+      0 0 20px rgba(255,215,0,0.5),
+      2px 2px 0 #000;
+    margin-bottom: 1cqh;
+    animation: glow 1.5s ease-in-out infinite alternate;
+  }
+  @keyframes glow {
+    from { text-shadow: 0 0 10px rgba(255,215,0,0.8), 0 0 20px rgba(255,215,0,0.5), 2px 2px 0 #000; }
+    to { text-shadow: 0 0 20px rgba(255,215,0,1), 0 0 40px rgba(255,215,0,0.8), 2px 2px 0 #000; }
+  }
+
+  .win-subtitle {
+    font-size: clamp(0.9rem, 4cqw, 1.3rem);
+    color: #fff;
+    margin-bottom: 4cqh;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .win-prize {
+    font-size: clamp(1.4rem, 7cqw, 2.2rem);
+    font-weight: bold;
+    color: #05c46b;
+    background: rgba(5, 196, 107, 0.15);
+    border: 2px solid #05c46b;
+    padding: 1.5cqh 5cqw;
+    border-radius: 3cqw;
+    margin-bottom: 5cqh;
+    box-shadow: 0 0 20px rgba(5, 196, 107, 0.4);
+    text-shadow: 0 0 10px rgba(5, 196, 107, 0.5);
+  }
+
+  .win-btn {
+    padding: 2cqh 8cqw;
+    font-size: clamp(1rem, 4.5cqw, 1.3rem);
+    font-weight: bold;
+    color: #05101f;
+    background: linear-gradient(90deg, #ffd700, #ffb400);
+    border: none;
+    border-radius: 3cqw;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.6);
+    transition: transform 0.2s, box-shadow 0.2s;
+    touch-action: manipulation;
+  }
+  .win-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  }
+
+  /* Confeti */
+  .confetti {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: #ffd700;
+    opacity: 0.8;
+    top: -20px;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110cqh) rotate(720deg); }
+  }
+</style>
+</head>
+<body>
+
+<div id="gameContainer">
+  <div class="game-inner">
+    <h1>💊 ¿QUIÉN QUIERE SER MILLONARIO? <small>Edición Farmacia</small></h1>
+
+    <div class="lifelines">
+      <button class="lifeline" id="lifeline-5050" title="50:50">
+        <span class="icon">½</span>
+        <span>50:50</span>
+      </button>
+      <button class="lifeline" id="lifeline-call" title="Llamar a un amigo">
+        <span class="icon">📞</span>
+        <span>Amigo</span>
+      </button>
+      <button class="lifeline" id="lifeline-audience" title="Ayuda del público">
+        <span class="icon">👥</span>
+        <span>Público</span>
+      </button>
+    </div>
+
+    <div class="question-box">
+      <div>
+        <div class="question-number" id="questionNumber">Pregunta 1</div>
+        <div id="questionText">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="options" id="options"></div>
+
+    <div class="message" id="message"></div>
+    <button class="restart-btn" id="restartBtn">🔄 Jugar de nuevo</button>
+
+    <div class="ladder" id="ladder">
+      <h2>PREMIO</h2>
+    </div>
+  </div>
+
+  <!-- Modal público -->
+  <div class="modal" id="audienceModal">
+    <div class="modal-content">
+      <h3>👥 Ayuda del público</h3>
+      <div id="audienceBars"></div>
+      <button class="modal-close" id="closeAudience">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PANTALLA DE VICTORIA
+       ============================================================ -->
+  <div id="victoryScreen">
+    <div class="glow-bg"></div>
+    <div class="victory-content">
+      <div class="trophy">🏆</div>
+      <div class="win-title">¡Felicidades!</div>
+      <div class="win-subtitle">¡Eres el nuevo<br>Millonario Farmacéutico!</div>
+      <div class="win-prize">$1,000,000</div>
+      <button class="win-btn" id="playAgainBtn">Jugar de nuevo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   BANCO DE PREGUNTAS - VERSIÓN FARMACÉUTICA
+   ============================================================ */
+const questions = [
+  { q: "¿Cuál es el nombre genérico del medicamento comercializado como 'Advil' o 'Motrin'?",
+    options: ["Ibuprofeno", "Paracetamol", "Aspirina", "Naproxeno"], correct: 0, prize: "$100" },
+  { q: "¿Qué vía de administración consiste en la aplicación de un fármaco bajo la lengua?",
+    options: ["Vía oral", "Vía sublingual", "Vía intramuscular", "Vía tópica"], correct: 1, prize: "$200" },
+  { q: "¿Qué antibiótico pertenece a la familia de las penicilinas?",
+    options: ["Azitromicina", "Amoxicilina", "Ciprofloxacino", "Vancomicina"], correct: 1, prize: "$300" },
+  { q: "¿Cuál es la función principal de la insulina en el organismo?",
+    options: ["Aumentar la glucosa en sangre", "Regular el calcio", "Disminuir la glucosa en sangre", "Diluir la sangre"], correct: 2, prize: "$500" },
+  { q: "¿Qué medicamento es un antagonista de los receptores H2 y se usa para la acidez gástrica?",
+    options: ["Omeprazol", "Ranitidina", "Metoclopramida", "Loperamida"], correct: 1, prize: "$1,000" },
+  { q: "¿Cuál es el antídoto específico para la sobredosis de paracetamol?",
+    options: ["Naloxona", "Flumazenil", "N-acetilcisteína", "Atropina"], correct: 2, prize: "$2,000" },
+  { q: "¿Qué tipo de medicamento es el salbutamol?",
+    options: ["Antihistamínico", "Broncodilatador", "Corticoide", "Antibiótico"], correct: 1, prize: "$4,000" },
+  { q: "¿Cuál de estos fármacos es un inhibidor de la bomba de protones (IBP)?",
+    options: ["Omeprazol", "Ranitidina", "Domperidona", "Sucralfato"], correct: 0, prize: "$8,000" },
+  { q: "¿Qué fármaco se utiliza como anticoagulante oral y su antídoto es la vitamina K?",
+    options: ["Heparina", "Warfarina", "Clopidogrel", "Aspirina"], correct: 1, prize: "$16,000" },
+  { q: "¿Cuál es el mecanismo de acción de los antibióticos betalactámicos?",
+    options: ["Inhiben la síntesis de proteínas", "Inhiben la síntesis de la pared celular bacteriana", "Bloquean la replicación del ADN", "Alteran la membrana celular"], correct: 1, prize: "$32,000" },
+  { q: "¿Qué fármaco es un inhibidor selectivo de la recaptación de serotonina (ISRS)?",
+    options: ["Fluoxetina", "Amitriptilina", "Diazepam", "Haloperidol"], correct: 0, prize: "$64,000" },
+  { q: "¿Cuál es el principal efecto adverso de los aminoglucósidos como la gentamicina?",
+    options: ["Hepatotoxicidad", "Nefrotoxicidad y ototoxicidad", "Cardiotoxicidad", "Neuropatía periférica"], correct: 1, prize: "$125,000" },
+  { q: "¿Qué medicamento se usa como profilaxis cardiovascular e inhibe la ciclooxigenasa-1?",
+    options: ["Clopidogrel", "Aspirina (ácido acetilsalicílico)", "Warfarina", "Heparina"], correct: 1, prize: "$250,000" },
+  { q: "¿Cuál es el fármaco de elección para el tratamiento de la anafilaxia?",
+    options: ["Difenhidramina", "Adrenalina (epinefrina)", "Prednisona", "Salbutamol"], correct: 1, prize: "$500,000" },
+  { q: "¿Qué interacción farmacológica es característica entre el alcohol y el metronidazol?",
+    options: ["Efecto disulfiram (náuseas, vómito, rubor)", "Aumento del efecto antibiótico", "Disminución de la absorción", "Ninguna interacción"], correct: 0, prize: "$1,000,000" }
+];
+
+/* ============================================================
+   ESTADO DEL JUEGO
+   ============================================================ */
+let currentIndex = 0;
+let lifelines = { fifty: true, call: true, audience: true };
+let answered = false;
+let gameOver = false;
+let secondChanceUsed = false;
+
+const questionText = document.getElementById('questionText');
+const questionNumber = document.getElementById('questionNumber');
+const optionsContainer = document.getElementById('options');
+const messageEl = document.getElementById('message');
+const restartBtn = document.getElementById('restartBtn');
+const ladderEl = document.getElementById('ladder');
+const victoryScreen = document.getElementById('victoryScreen');
+
+const btn5050 = document.getElementById('lifeline-5050');
+const btnCall = document.getElementById('lifeline-call');
+const btnAudience = document.getElementById('lifeline-audience');
+
+const audienceModal = document.getElementById('audienceModal');
+const audienceBars = document.getElementById('audienceBars');
+const closeAudience = document.getElementById('closeAudience');
+
+/* ============================================================
+   ESCALERA
+   ============================================================ */
+function buildLadder() {
+  ladderEl.innerHTML = '<h2>PREMIO</h2>';
+  for (let i = 0; i < questions.length; i++) {
+    const rung = document.createElement('div');
+    rung.className = 'rung';
+    rung.dataset.index = i;
+    rung.innerHTML = `<span>${i + 1}</span><span>${questions[i].prize}</span>`;
+    ladderEl.appendChild(rung);
+  }
+  updateLadder();
+}
+
+function updateLadder() {
+  ladderEl.querySelectorAll('.rung').forEach(r => {
+    const idx = parseInt(r.dataset.index);
+    r.classList.remove('active', 'passed');
+    if (idx < currentIndex) r.classList.add('passed');
+    if (idx === currentIndex && !gameOver) r.classList.add('active');
+  });
+
+  const activeRung = ladderEl.querySelector('.rung.active');
+  if (activeRung) {
+    activeRung.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+/* ============================================================
+   CONFETI (Para la pantalla de victoria)
+   ============================================================ */
+function launchConfetti() {
+  const colors = ['#ffd700', '#ffb400', '#05c46b', '#4facfe', '#ffffff'];
+  for (let i = 0; i < 50; i++) {
+    setTimeout(() => {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + 'cqw';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+      confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+      
+      // Forma aleatoria (cuadrado o círculo)
+      if (Math.random() > 0.5) confetti.style.borderRadius = '50%';
+      
+      victoryScreen.appendChild(confetti);
+      
+      // Limpiar después de que caiga
+      setTimeout(() => confetti.remove(), 5000);
+    }, i * 50);
+  }
+}
+
+/* ============================================================
+   MOSTRAR PREGUNTA
+   ============================================================ */
+function showQuestion() {
+  if (currentIndex >= questions.length) { endGame(true); return; }
+  answered = false;
+  const q = questions[currentIndex];
+  questionNumber.textContent = `Pregunta ${currentIndex + 1} de ${questions.length}`;
+  questionText.textContent = q.q;
+  messageEl.textContent = '';
+  messageEl.className = 'message';
+
+  optionsContainer.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectAnswer(i));
+    optionsContainer.appendChild(btn);
+  });
+
+  btn5050.disabled = !lifelines.fifty;
+  btnCall.disabled = !lifelines.call;
+  btnAudience.disabled = !lifelines.audience;
+
+  updateLadder();
+}
+
+/* ============================================================
+   SELECCIONAR RESPUESTA
+   ============================================================ */
+function selectAnswer(index) {
+  if (answered || gameOver) return;
+  answered = true;
+  const q = questions[currentIndex];
+  const optionBtns = optionsContainer.querySelectorAll('.option');
+  optionBtns.forEach(btn => btn.classList.add('disabled'));
+
+  if (index === q.correct) {
+    optionBtns[index].classList.add('correct');
+    messageEl.textContent = `✅ ¡Correcto! Ganaste ${q.prize}`;
+    messageEl.className = 'message win';
+    currentIndex++;
+    updateLadder();
+    setTimeout(() => {
+      if (currentIndex >= questions.length) endGame(true);
+      else showQuestion();
+    }, 1500);
+    return;
+  }
+
+  optionBtns[index].classList.add('wrong');
+  optionBtns[q.correct].classList.add('correct');
+
+  if (!secondChanceUsed) {
+    secondChanceUsed = true;
+    messageEl.innerHTML = `❌ Era la <b>${'ABCD'[q.correct]}</b>. ¡Tienes <b>una segunda oportunidad</b>!`;
+    messageEl.className = 'message warn';
+    setTimeout(() => {
+      currentIndex++;
+      updateLadder();
+      if (currentIndex >= questions.length) {
+        endGame(true);
+      } else {
+        showQuestion();
+        messageEl.textContent = '🛟 Segunda oportunidad usada. ¡Sigue así!';
+        messageEl.className = 'message warn';
+      }
+    }, 2200);
+  } else {
+    gameOver = true;
+    messageEl.innerHTML = `❌ Incorrecto. La correcta era <b>${'ABCD'[q.correct]}</b>.`;
+    messageEl.className = 'message lose';
+    setTimeout(() => endGame(false), 2000);
+  }
+}
+
+/* ============================================================
+   FIN DEL JUEGO Y VICTORIA
+   ============================================================ */
+function endGame(win) {
+  gameOver = true;
+  optionsContainer.querySelectorAll('.option').forEach(btn => btn.classList.add('disabled'));
+
+  if (win) {
+    // Mostrar pantalla de victoria bonita
+    messageEl.textContent = '';
+    victoryScreen.classList.add('show');
+    launchConfetti();
+  } else {
+    const prize = currentIndex > 0 ? questions[currentIndex - 1].prize : '$0';
+    messageEl.textContent += ` | Te llevas ${prize}`;
+    restartBtn.classList.add('show');
+  }
+  updateLadder();
+}
+
+/* ============================================================
+   COMODINES
+   ============================================================ */
+btn5050.addEventListener('click', () => {
+  if (!lifelines.fifty || answered || gameOver) return;
+  lifelines.fifty = false;
+  btn5050.disabled = true;
+  const q = questions[currentIndex];
+  const optionBtns = [...optionsContainer.querySelectorAll('.option')];
+  const wrongIndices = optionBtns.map((_, i) => i).filter(i => i !== q.correct);
+  wrongIndices.sort(() => Math.random() - 0.5);
+  wrongIndices.slice(0, 2).forEach(i => optionBtns[i].classList.add('hidden-option'));
+  messageEl.textContent = '½ Eliminaste dos respuestas incorrectas';
+  messageEl.className = 'message';
+});
+
+btnCall.addEventListener('click', () => {
+  if (!lifelines.call || answered || gameOver) return;
+  lifelines.call = false;
+  btnCall.disabled = true;
+  const q = questions[currentIndex];
+  const letters = ['A', 'B', 'C', 'D'];
+  const acierta = Math.random() < 0.8;
+  let suggested;
+  if (acierta) suggested = q.correct;
+  else {
+    const wrong = q.options.map((_, i) => i).filter(i => i !== q.correct);
+    suggested = wrong[Math.floor(Math.random() * wrong.length)];
+  }
+  messageEl.textContent = `📞 Tu amigo dice: "Yo creo que es la ${letters[suggested]}: ${q.options[suggested]}"`;
+  messageEl.className = 'message';
+});
+
+btnAudience.addEventListener('click', () => {
+  if (!lifelines.audience || answered || gameOver) return;
+  lifelines.audience = false;
+  btnAudience.disabled = true;
+  const q = questions[currentIndex];
+  const letters = ['A', 'B', 'C', 'D'];
+  let percentages = q.options.map(() => Math.random() * 30 + 5);
+  percentages[q.correct] += Math.random() * 30 + 30;
+  const total = percentages.reduce((a, b) => a + b, 0);
+  percentages = percentages.map(p => Math.round((p / total) * 100));
+  const diff = 100 - percentages.reduce((a, b) => a + b, 0);
+  percentages[q.correct] += diff;
+
+  audienceBars.innerHTML = '';
+  percentages.forEach((pct, i) => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `<span class="label">${letters[i]}</span><div class="bar-container"><div class="bar-fill" data-pct="${pct}"></div></div><span class="pct">${pct}%</span>`;
+    audienceBars.appendChild(row);
+  });
+  audienceModal.classList.add('show');
+  setTimeout(() => {
+    audienceBars.querySelectorAll('.bar-fill').forEach(bar => { bar.style.width = bar.dataset.pct + '%'; });
+  }, 50);
+});
+
+closeAudience.addEventListener('click', () => audienceModal.classList.remove('show'));
+
+/* ============================================================
+   REINICIAR
+   ============================================================ */
+function resetGame() {
+  currentIndex = 0;
+  gameOver = false;
+  answered = false;
+  secondChanceUsed = false;
+  lifelines = { fifty: true, call: true, audience: true };
+  restartBtn.classList.remove('show');
+  victoryScreen.classList.remove('show');
+  
+  // Limpiar confeti si quedó alguno
+  victoryScreen.querySelectorAll('.confetti').forEach(c => c.remove());
+  
+  buildLadder();
+  showQuestion();
+}
+
+restartBtn.addEventListener('click', resetGame);
+document.getElementById('playAgainBtn').addEventListener('click', resetGame);
+
+/* ============================================================
+   INICIO
+   ============================================================ */
+buildLadder();
+showQuestion();
+</script>
+</body>
+</html>
