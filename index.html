@@ -411,7 +411,7 @@
     <div class="victory-content">
       <div class="trophy">🏆</div>
       <div class="win-title">¡Felicidades!</div>
-      <div class="win-subtitle">¡Eres el nuevo<br>Millonario Farmacéutico!</div>
+      <div class="win-subtitle">¡Eres muy inteligente,<br> ahora eres un farmacéutico!</div>
       <div class="win-prize">$1,000,000</div>
       <button class="win-btn" id="playAgainBtn">Jugar de nuevo</button>
     </div>
@@ -425,19 +425,21 @@
 
 <script>
 /* ============================================================
-   SISTEMA DE AUDIO (Web Audio API)
+   SISTEMA DE AUDIO (Web Audio API) MEJORADO
    ============================================================ */
 let audioCtx = null;
+let bgMusicInterval = null;
+let bgMusicOscillators = []; // Para poder apagar la música de fondo
+let isMusicPlaying = false;
 
-// Inicializa el contexto de audio (necesario para navegadores modernos)
 function initAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
 }
 
-// Función para reproducir un tono
-function playTone(frequency, type, duration, vol=0.1, delay=0) {
+// Función base para los tonos (Volumen subido a 0.25 - 0.3)
+function playTone(frequency, type, duration, vol=0.2, delay=0) {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -445,7 +447,6 @@ function playTone(frequency, type, duration, vol=0.1, delay=0) {
   osc.type = type;
   osc.frequency.setValueAtTime(frequency, audioCtx.currentTime + delay);
   
-  // Envolvente para que no suene de golpe
   gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
   gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + delay + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
@@ -457,32 +458,89 @@ function playTone(frequency, type, duration, vol=0.1, delay=0) {
   osc.stop(audioCtx.currentTime + delay + duration);
 }
 
-// Sonido de acierto (Ding ascendente alegre)
+// 🎵 MÚSICA DE FONDO (Bucle suave)
+function startBgMusic() {
+  if (isMusicPlaying || !audioCtx) return;
+  isMusicPlaying = true;
+  
+  // Melodía ambiental de fondo (frecuencias suaves)
+  const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; // C4, E4, G4, C5, G4, E4
+  let noteIndex = 0;
+
+  function playNextBgNote() {
+    if (!isMusicPlaying || !audioCtx) return;
+    
+    const freq = notes[noteIndex];
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    
+    // Volumen MUY bajito para que sea solo ambiente (0.03)
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 1.5);
+    
+    bgMusicOscillators.push(osc);
+    
+    noteIndex = (noteIndex + 1) % notes.length;
+    
+    // Siguiente nota en 1.2 segundos
+    if (isMusicPlaying) {
+      bgMusicInterval = setTimeout(playNextBgNote, 1200);
+    }
+  }
+  
+  playNextBgNote();
+}
+
+function stopBgMusic() {
+  isMusicPlaying = false;
+  if (bgMusicInterval) {
+    clearTimeout(bgMusicInterval);
+    bgMusicInterval = null;
+  }
+  // Apagar cualquier nota que esté sonando
+  bgMusicOscillators.forEach(osc => {
+    try { osc.stop(); } catch(e) {}
+  });
+  bgMusicOscillators = [];
+}
+
+// Sonidos de Efectos (Volumen subido)
 function playCorrectSound() {
   initAudio();
-  playTone(523.25, 'sine', 0.15, 0.1, 0);    // C5
-  playTone(659.25, 'sine', 0.15, 0.1, 0.1);  // E5
-  playTone(783.99, 'sine', 0.4, 0.1, 0.2);   // G5
+  // Volumen subido a 0.3
+  playTone(523.25, 'sine', 0.15, 0.3, 0);    
+  playTone(659.25, 'sine', 0.15, 0.3, 0.1);  
+  playTone(783.99, 'sine', 0.4, 0.3, 0.2);   
 }
 
-// Sonido de error (Buzz grave)
 function playWrongSound() {
   initAudio();
-  playTone(150, 'sawtooth', 0.3, 0.15, 0);
-  playTone(130, 'sawtooth', 0.3, 0.15, 0.1);
+  // Volumen subido a 0.35
+  playTone(150, 'sawtooth', 0.4, 0.35, 0);
+  playTone(130, 'sawtooth', 0.4, 0.35, 0.1);
 }
 
-// Música de victoria (Arpegio feliz)
 function playVictorySound() {
   initAudio();
-  const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+  stopBgMusic(); // Apagar música de fondo al ganar
+  
+  const notes = [523.25, 659.25, 783.99, 1046.50];
   notes.forEach((freq, i) => {
-    playTone(freq, 'triangle', 0.4, 0.1, i * 0.15);
+    playTone(freq, 'triangle', 0.5, 0.3, i * 0.15);
   });
-  // Un acorde final
-  playTone(523.25, 'sine', 1.5, 0.1, 0.6);
-  playTone(659.25, 'sine', 1.5, 0.1, 0.6);
-  playTone(783.99, 'sine', 1.5, 0.1, 0.6);
+  playTone(523.25, 'sine', 1.5, 0.25, 0.6);
+  playTone(659.25, 'sine', 1.5, 0.25, 0.6);
+  playTone(783.99, 'sine', 1.5, 0.25, 0.6);
 }
 
 /* ============================================================
@@ -632,8 +690,12 @@ function showQuestion() {
 function selectAnswer(index) {
   if (answered || gameOver) return;
   
-  // Inicializar audio en el primer clic (para que los navegadores lo permitan)
   initAudio();
+  
+  // Iniciar música de fondo si es la primera interacción
+  if (!isMusicPlaying && currentIndex >= 0) {
+    startBgMusic();
+  }
 
   answered = true;
   const q = questions[currentIndex];
@@ -644,7 +706,7 @@ function selectAnswer(index) {
     optionBtns[index].classList.add('correct');
     messageEl.textContent = `✅ ¡Correcto! Ganaste ${q.prize}`;
     messageEl.className = 'message win';
-    playCorrectSound(); // <--- SONIDO DE ACIERTO
+    playCorrectSound();
     
     currentIndex++;
     updateLadder();
@@ -660,7 +722,7 @@ function selectAnswer(index) {
   optionBtns[q.correct].classList.add('correct');
   messageEl.textContent = ''; 
   
-  playWrongSound(); // <--- SONIDO DE ERROR
+  playWrongSound(); 
   
   defeatScreen.classList.add('show');
   defeatIcon.classList.add('animate-x');
@@ -690,6 +752,7 @@ function selectAnswer(index) {
 
   } else {
     gameOver = true;
+    stopBgMusic(); // Apagar música al perder
     
     setTimeout(() => {
       defeatScreen.classList.remove('show');
@@ -714,7 +777,7 @@ function endGame(win) {
   if (win) {
     messageEl.textContent = '';
     victoryScreen.classList.add('show');
-    playVictorySound(); // <--- MÚSICA DE VICTORIA
+    playVictorySound(); 
     launchConfetti();
   }
   updateLadder();
@@ -794,6 +857,8 @@ function resetGame() {
   victoryScreen.classList.remove('show');
   defeatScreen.classList.remove('show');
   defeatIcon.classList.remove('animate-x');
+  
+  stopBgMusic(); // Detener la música al reiniciar
   
   victoryScreen.querySelectorAll('.confetti').forEach(c => c.remove());
   
